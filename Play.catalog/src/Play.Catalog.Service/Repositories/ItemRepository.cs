@@ -3,58 +3,58 @@ using Play.Catalog.Service.Entities;
 
 namespace Play.Catalog.Service.Repositories
 {
-    public class ItemRepository : IItemsRepository
+    public class MongoRepository<T> : IRepository<T> where T : IEntity
     {
-        private const string collectionName = "items";  // mongoDb collection name
-        private readonly IMongoCollection<Item> dbCollection; // mongoDb collection
-        private readonly FilterDefinitionBuilder<Item> filterBuilder = Builders<Item>.Filter; // filter builder
+        // private const string collectionName = "items";  // mongoDb collection name
+        private readonly IMongoCollection<T> dbCollection; // mongoDb collection
+        private readonly FilterDefinitionBuilder<T> filterBuilder = Builders<T>.Filter; // filter builder
 
-        public ItemRepository( IMongoDatabase database )
+        public MongoRepository( IMongoDatabase database, string collectionName )
         {
             /* without dependency injection */
             // var mongoClient = new MongoClient("mongodb://localhost:27017"); // mongoDb client to create a connection to a MongoDB server
             // var database = mongoClient.GetDatabase("Catalog"); // Retrieves an instance of the Catalog database from the MongoDB server
             
-            dbCollection = database.GetCollection<Item>(collectionName); // Stores and retrieves documents that follow the structure of the Item class
+            dbCollection = database.GetCollection<T>(collectionName); // Stores and retrieves documents that follow the structure of the Item class
         }
 
         // Corrected method name
-        public async Task<IReadOnlyCollection<Item>> GetItemsAsync()
+        public async Task<IReadOnlyCollection<T>> GetAsync()
         {
             return await dbCollection.Find(filterBuilder.Empty).ToListAsync();
         }
 
-        public async Task<Item> GetItemAsync(Guid id)
+        public async Task<T> GetAsync(Guid id)
         {
-            FilterDefinition<Item> filter = filterBuilder.Eq(item => item.Id, id);
+            FilterDefinition<T> filter = filterBuilder.Eq(entity => entity.Id, id);
             return await dbCollection.Find(filter).FirstOrDefaultAsync();
         }
 
-        public async Task CreateItemAsync(Item item)
+        public async Task CreateAsync(T entity)
         {
-            if (item == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException(nameof(item));
+                throw new ArgumentNullException(nameof(entity));
             }
 
-            await dbCollection.InsertOneAsync(item);
+            await dbCollection.InsertOneAsync(entity);
         }
 
-        public async Task UpdateItemAsync(Item item)
+        public async Task UpdateAsync(T entity)
         {
-            if (item == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException(nameof(item));
+                throw new ArgumentNullException(nameof(entity));
             }
 
-            FilterDefinition<Item> filter = filterBuilder.Eq(existingItem => existingItem.Id, item.Id);
+            FilterDefinition<T> filter = filterBuilder.Eq(existingEntity => existingEntity.Id, entity.Id);
 
-            await dbCollection.ReplaceOneAsync(filter, item);
+            await dbCollection.ReplaceOneAsync(filter, entity);
         }
 
-        public async Task DeleteItemAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
-            FilterDefinition<Item> filter = filterBuilder.Eq(item => item.Id, id);
+            FilterDefinition<T> filter = filterBuilder.Eq(entity => entity.Id, id);
 
             await dbCollection.DeleteOneAsync(filter);
         }

@@ -10,14 +10,14 @@ namespace Play.Catalog.Service.Controllers
     [Route("items")]
     public class ItemsController : ControllerBase
     {
-        private readonly IItemsRepository repository;
+        private readonly IRepository<Item> repository;
         // private readonly ReadOnlyCollection<Item> items = [
         //     new Item { Id = Guid.NewGuid(), Name = "Potion", Price = 9, CreatedDate = DateTimeOffset.UtcNow },
         //     new Item { Id = Guid.NewGuid(), Name = "Iron Sword", Price = 20, CreatedDate = DateTimeOffset.UtcNow },
         //     new Item { Id = Guid.NewGuid(), Name = "Bronze Shield", Price = 18, CreatedDate = DateTimeOffset.UtcNow }
         // ];
 
-        public ItemsController(IItemsRepository repository)
+        public ItemsController(IRepository<Item> repository)
         {
             this.repository = repository;
         }
@@ -25,7 +25,7 @@ namespace Play.Catalog.Service.Controllers
         [HttpGet]
         public async Task<IEnumerable<ItemDto>> GetAsync()
         {
-            var items = (await repository.GetItemsAsync())
+            var items = (await repository.GetAsync())
                         .Select(item => item.AsDto());
 
             return items;
@@ -34,7 +34,7 @@ namespace Play.Catalog.Service.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ItemDto>> GetByIdAsync(Guid id)
         {
-            var item = await repository.GetItemAsync(id);
+            var item = await repository.GetAsync(id);
             if (item is null)
             {
                 return NotFound();
@@ -54,7 +54,7 @@ namespace Play.Catalog.Service.Controllers
                 Price = createItemDto.Price,
                 CreatedDate = DateTimeOffset.UtcNow
             };
-            await repository.CreateItemAsync(item);
+            await repository.CreateAsync(item);
 
             return CreatedAtAction(nameof(GetByIdAsync), new { id = item.Id }, item);
         }
@@ -63,13 +63,13 @@ namespace Play.Catalog.Service.Controllers
         public async Task<ActionResult> PutAsync(Guid id, UpdateItemDto updateItemDto)
         {
 
-            var existingItem = await repository.GetItemAsync(id);
+            var existingItem = await repository.GetAsync(id);
             if (existingItem is null)
             {
                 return NotFound();
             }
 
-            await repository.UpdateItemAsync(new Item
+            await repository.UpdateAsync(new Item
             {
                 Id = id,
                 Name = updateItemDto.Name,
@@ -84,13 +84,13 @@ namespace Play.Catalog.Service.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteAsync(Guid id)
         {
-            var existingItem = await repository.GetItemAsync(id);
+            var existingItem = await repository.GetAsync(id);
             if (existingItem is null)
             {
                 return NotFound();
             }
 
-            await repository.DeleteItemAsync(id);
+            await repository.DeleteAsync(id);
             return NoContent();
         }
     }
