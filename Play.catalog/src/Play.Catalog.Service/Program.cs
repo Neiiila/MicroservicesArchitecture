@@ -1,6 +1,11 @@
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
+using Play.Catalog.Service.Repositories;
+using Play.Catalog.Service.Settings;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +19,29 @@ builder.Services.AddControllers(
     {
         options.SuppressAsyncSuffixInActionNames = false;
     }
+
 );
 
+// Bind settings from appsettigns : Configure the services with the settings in appSettings.json file
+builder.Services.Configure<ServiceSettings>(builder.Configuration.GetSection(nameof(ServiceSettings)));
+builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection(nameof(MongoDbSettings)));
+
+builder.Services.AddSingleton( serviceProvider =>
+{
+    /* create a mongo client to add it to my services  */
+    // Retrieve MongoDbSettings
+    var mongoDbSettings = serviceProvider.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    // Create MongoClient
+    var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
+
+    // Retrieve ServiceSettings
+    var serviceSettings = serviceProvider.GetRequiredService<IOptions<ServiceSettings>>().Value;
+
+    // Return MongoDB database instance
+    return mongoClient.GetDatabase(serviceSettings.ServiceName);
+});
+
+builder.Services.AddSingleton<IItemsRepository, ItemRepository>();
 
 BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
 BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
