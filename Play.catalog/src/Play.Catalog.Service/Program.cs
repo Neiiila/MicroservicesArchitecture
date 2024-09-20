@@ -23,30 +23,10 @@ builder.Services.AddControllers(
 
 );
 
-// Bind settings from appsettigns : Configure the services with the settings in appSettings.json file
-builder.Services.Configure<ServiceSettings>(builder.Configuration.GetSection(nameof(ServiceSettings)));
-builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection(nameof(MongoDbSettings)));
-
-builder.Services.AddSingleton( serviceProvider =>
-{
-    /* create a mongo client to add it to my services  */
-    // Retrieve MongoDbSettings
-    var mongoDbSettings = serviceProvider.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-    // Create MongoClient
-    var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
-
-    // Retrieve ServiceSettings
-    var serviceSettings = serviceProvider.GetRequiredService<IOptions<ServiceSettings>>().Value;
-
-    // Return MongoDB database instance
-    return mongoClient.GetDatabase(serviceSettings.ServiceName);
-});
-
-builder.Services.AddSingleton<IRepository<Item>>(serviceProvider => {
-    // get an instance that already registred in container 
-    var database = serviceProvider.GetRequiredService<IMongoDatabase>();
-    return new MongoRepository<Item>(database, "items"); // geenerate a repository for the Item entity, where we give it databse and collection name 
-});
+// Move configuration to extensions in format of methodes in IServiceCollections
+// we used extension to add methodes to generate mongorepository  and generate mongo client. As we can use it for adding other services collections and repositories
+builder.Services.AddMongo(builder.Configuration)
+                .AddMongoRepository<Item>("items");
 
 BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
 BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
