@@ -9,12 +9,12 @@ namespace Play.Catalog.Service.Repositories
         private readonly IMongoCollection<T> dbCollection; // mongoDb collection
         private readonly FilterDefinitionBuilder<T> filterBuilder = Builders<T>.Filter; // filter builder
 
-        public MongoRepository( IMongoDatabase database, string collectionName )
+        public MongoRepository(IMongoDatabase database, string collectionName)
         {
             /* without dependency injection */
             // var mongoClient = new MongoClient("mongodb://localhost:27017"); // mongoDb client to create a connection to a MongoDB server
             // var database = mongoClient.GetDatabase("Catalog"); // Retrieves an instance of the Catalog database from the MongoDB server
-            
+
             dbCollection = database.GetCollection<T>(collectionName); // Stores and retrieves documents that follow the structure of the Item class
         }
 
@@ -27,6 +27,11 @@ namespace Play.Catalog.Service.Repositories
         public async Task<T> GetAsync(Guid id)
         {
             FilterDefinition<T> filter = filterBuilder.Eq(entity => entity.Id, id);
+            return await dbCollection.Find(filter).FirstOrDefaultAsync();
+        }
+        public async Task<T> GetAsync(string name)
+        {
+            FilterDefinition<T> filter = filterBuilder.Eq(entity => entity.Name, name);
             return await dbCollection.Find(filter).FirstOrDefaultAsync();
         }
 

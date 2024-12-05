@@ -7,6 +7,7 @@ namespace Play.Catalog.Service.Repositories
         Task CreateAsync(T item);
         Task DeleteAsync(Guid id);
         Task<T> GetAsync(Guid id);
+        Task<T> GetAsync(string name);
         Task<IReadOnlyCollection<T>> GetAsync();
         Task UpdateAsync(T item);
     }
