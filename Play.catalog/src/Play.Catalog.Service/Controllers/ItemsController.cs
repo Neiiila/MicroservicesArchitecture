@@ -43,6 +43,18 @@ namespace Play.Catalog.Service.Controllers
             return item.AsDto();
         }
 
+        [HttpGet("ByName/{name}")]
+        public async Task<ActionResult<ItemDto>> GetByNameAsync(string name)
+        {
+            var item = await repository.GetAsync(name);
+            if (item is null)
+            {
+                return NotFound();
+            }
+
+            return item.AsDto();
+        }
+
         // ActionResult to returns a type of results ( NotFound, Okey, etc) or a special type <Type>
         [HttpPost]
         public async Task<ActionResult<ItemDto>> PostAsync(CreateItemDto createItemDto)
